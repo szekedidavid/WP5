@@ -118,7 +118,7 @@ class FuelTank:
     def shell_buckling_struct(self, t3_temp, sigma):
         lambd = np.sqrt(
             12 / np.pi ** 4 * self.l2 ** 4 / (self.R ** 2 * t3_temp ** 2) * (1 - self.nu_struct ** 2))   # optimum lambda
-        Q = self.p / self.E_struct * (self.R / t3_temp) ** 2
+        Q = 0
         k = lambd + 12 / np.pi ** 4 * self.l2 ** 4 / (self.R ** 2 * t3_temp ** 2) * \
             (1 - self.nu_struct ** 2) * 1 / lambd
 

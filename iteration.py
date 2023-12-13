@@ -24,13 +24,13 @@ material_struct = materials["Al2024-T3"]
 
 M_0 = M_dry_0 - M_tank_0   # mass of the spacecraft excluding the structure and the fuel
 p = 20e5
-R = 0.3
+R = 0.2
 
 tank = FuelTank(n_load, n_volume, n_safety, H, p, M_p, rho_p, material_tank, material_struct, M_0, R)
 
-print(tank.mass)
+print(tank.mass())
 print(tank.t1)
 print(tank.t2)
 print(tank.t3)
-print(tank.column_buckling_tank)
-print(tank.column_bucking_struct)
+print(tank.column_buckling_tank())
+print(tank.column_bucking_struct())
