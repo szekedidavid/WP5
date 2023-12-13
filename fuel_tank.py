@@ -64,70 +64,70 @@ class FuelTank:
         return t2_pressure
 
     def get_t1_buckling(self):
-        t1_init = 0.001
+        t1_init = 0.001  # thickness to start iteration
         t1_temp_old = t1_init
 
         while True:
 
-            A_temp = 2 * np.pi * self.R * t1_temp_old
+            A_temp = 2 * np.pi * self.R * t1_temp_old   # cross-sectional area
             M_tot_temp = self.M_0 + self.M_struct + self.tank_cylinder_mass(t1_temp_old) + self.tank_bulkhead_mass(
-                t1_temp_old) + self.M_p
+                t1_temp_old) + self.M_p   # mass acting on fuel tank is mass of spacecraft, upper structure, its own mass and the propellant mass
 
             sigma = M_tot_temp * g * self.n_load / A_temp
-            t1_temp_new = sp.optimize.root_scalar(lambda t: self.shell_buckling_tank(t, sigma), x0=0.001).root
+            t1_temp_new = sp.optimize.root_scalar(lambda t: self.shell_buckling_tank(t, sigma), x0=0.001).root   # get new thickness
 
             if np.abs(t1_temp_old - t1_temp_new) < 0.00001:
                 break
             else:
-                t1_temp_old = t1_temp_new
+                t1_temp_old = t1_temp_new   # old thickness is new thickness
                 continue
 
         return t1_temp_new
 
     def get_t3_buckling(self):
-        t3_init = 0.001
+        t3_init = 0.001  # thickness to start iteration
         t3_temp_old = t3_init
 
         while True:
 
-            A_temp = 2 * np.pi * self.R * t3_temp_old
-            M_tot_temp = self.M_0 + self.struct_mass(t3_temp_old)
+            A_temp = 2 * np.pi * self.R * t3_temp_old  # cross-sectional area
+            M_tot_temp = self.M_0 + self.struct_mass(t3_temp_old)   # mass acting on upper structure is just its own mass plus the mass of the spaceraft
 
             sigma = M_tot_temp * g * self.n_load / A_temp
-            t3_temp_new = sp.optimize.root_scalar(lambda t: self.shell_buckling_struct(t, sigma), x0=0.001).root
+            t3_temp_new = sp.optimize.root_scalar(lambda t: self.shell_buckling_struct(t, sigma), x0=0.001).root   # get new thickness
 
             if np.abs(t3_temp_old - t3_temp_new) < 0.00001:
                 break
             else:
-                t3_temp_old = t3_temp_new
+                t3_temp_old = t3_temp_new   # old thickness is new thickness
                 continue
 
         return t3_temp_new
 
     def shell_buckling_tank(self, t1_temp, sigma):
         lambd = np.sqrt(
-            12 / np.pi ** 4 * self.l1 ** 4 / (self.R ** 2 * t1_temp ** 2) * (1 - self.nu_tank ** 2))
+            12 / np.pi ** 4 * self.l1 ** 4 / (self.R ** 2 * t1_temp ** 2) * (1 - self.nu_tank ** 2))   # optimum lambda
         Q = self.p / self.E_tank * (self.R / t1_temp) ** 2
         k = lambd + 12 / np.pi ** 4 * self.l1 ** 4 / (self.R ** 2 * t1_temp ** 2) * \
             (1 - self.nu_tank ** 2) * 1 / lambd
 
         sigma_cr = (1.983 - 0.983 * np.e ** (-23.14 * Q)) * k * np.pi ** 2 * \
-                   self.E_tank / (12 * (1 - self.nu_tank ** 2)) * (t1_temp / self.l1) ** 2
+            self.E_tank / (12 * (1 - self.nu_tank ** 2)) * (t1_temp / self.l1) ** 2
         return sigma_cr - sigma
 
     def shell_buckling_struct(self, t3_temp, sigma):
         lambd = np.sqrt(
-            12 / np.pi ** 4 * self.l2 ** 4 / (self.R ** 2 * t3_temp ** 2) * (1 - self.nu_struct ** 2))
+            12 / np.pi ** 4 * self.l2 ** 4 / (self.R ** 2 * t3_temp ** 2) * (1 - self.nu_struct ** 2))   # optimum lambda
         Q = self.p / self.E_struct * (self.R / t3_temp) ** 2
         k = lambd + 12 / np.pi ** 4 * self.l2 ** 4 / (self.R ** 2 * t3_temp ** 2) * \
             (1 - self.nu_struct ** 2) * 1 / lambd
 
         sigma_cr = (1.983 - 0.983 * np.e ** (-23.14 * Q)) * k * np.pi ** 2 * \
-                   self.E_struct / (12 * (1 - self.nu_struct ** 2)) * (t3_temp / self.l2) ** 2
+            self.E_struct / (12 * (1 - self.nu_struct ** 2)) * (t3_temp / self.l2) ** 2
         return sigma_cr - sigma
 
     def tank_bulkhead_mass(self, t):
-        return 4 * np.pi * self.R ** 2 * t * self.rho_tank
+        return 4 * np.pi * self.R ** 2 * t * self.rho_tank   # returns total mass of the two bulkheads
 
     def tank_cylinder_mass(self, t):
         return 2 * np.pi * self.R * t * self.l2 * self.rho_tank
@@ -135,18 +135,15 @@ class FuelTank:
     def struct_mass(self, t):
         return 2 * np.pi * self.R * t * self.l2 * self.rho_struct
 
-    @property
     def column_buckling_tank(self):
         sigma = (self.M_0 + self.M_struct) * self.n_load * g
         sigma_cr = np.pi ** 2 * self.E_tank * self.I1 / (self.A1 * self.l1 ** 2) / self.A1
         return sigma_cr - sigma
 
-    @property
     def column_bucking_struct(self):
         sigma = (self.M_0 + self.M_struct + self.M_tank_cylinder + self.M_tank_bulkheads + self.M_p) * self.n_load * g / self.A2
         sigma_cr = np.pi ** 2 * self.E_struct * self.I2 / (self.A2 * self.l2 ** 2)
         return sigma_cr - sigma
 
-    @property
     def mass(self):
         return self.M_tank_cylinder + self.M_tank_bulkheads + self.M_struct
